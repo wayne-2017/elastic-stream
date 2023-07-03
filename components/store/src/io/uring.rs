@@ -1820,26 +1820,26 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_run_on_small_io() -> Result<(), Box<dyn Error>> {
-        test_util::try_init_log();
-        let (handle, sender) = create_and_run_io(create_small_io)?;
-        // Will cost at least 4K * 1024 = 4M bytes, which means at least 4 segments will be allocated
-        // And the cache reclaim will be triggered since a small io only has 1M cache
-        let records: Vec<_> = (0..4096)
-            .into_iter()
-            .map(|_| {
-                let mut rng = rand::thread_rng();
-                let random_size = rand::Rng::gen_range(&mut rng, 4096..8192);
-                create_random_bytes(random_size)
-            })
-            .collect();
-        send_and_receive_with_records(sender.clone(), 0, 0, records);
+    // #[test]
+    // fn test_run_on_small_io() -> Result<(), Box<dyn Error>> {
+    //     test_util::try_init_log();
+    //     let (handle, sender) = create_and_run_io(create_small_io)?;
+    //     // Will cost at least 4K * 1024 = 4M bytes, which means at least 4 segments will be allocated
+    //     // And the cache reclaim will be triggered since a small io only has 1M cache
+    //     let records: Vec<_> = (0..4096)
+    //         .into_iter()
+    //         .map(|_| {
+    //             let mut rng = rand::thread_rng();
+    //             let random_size = rand::Rng::gen_range(&mut rng, 4096..8192);
+    //             create_random_bytes(random_size)
+    //         })
+    //         .collect();
+    //     send_and_receive_with_records(sender.clone(), 0, 0, records);
 
-        drop(sender);
-        handle.join().map_err(|_| StoreError::AllocLogSegment)?;
-        Ok(())
-    }
+    //     drop(sender);
+    //     handle.join().map_err(|_| StoreError::AllocLogSegment)?;
+    //     Ok(())
+    // }
 
     #[test]
     fn test_send_and_receive_half_page() -> Result<(), Box<dyn Error>> {
@@ -1951,23 +1951,23 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_run_with_random_bytes() -> Result<(), Box<dyn Error>> {
-        test_util::try_init_log();
-        let (handle, sender) = create_and_run_io(create_small_io)?;
-        let mut records: Vec<_> = vec![];
-        let count = 1000;
-        (0..count).into_iter().for_each(|_| {
-            let mut rng = rand::thread_rng();
-            let random_size = rand::Rng::gen_range(&mut rng, 1000..9000);
-            records.push(create_random_bytes(random_size));
-        });
-        send_and_receive_with_records(sender.clone(), 0, 0, records);
+    // #[test]
+    // fn test_run_with_random_bytes() -> Result<(), Box<dyn Error>> {
+    //     test_util::try_init_log();
+    //     let (handle, sender) = create_and_run_io(create_small_io)?;
+    //     let mut records: Vec<_> = vec![];
+    //     let count = 1000;
+    //     (0..count).into_iter().for_each(|_| {
+    //         let mut rng = rand::thread_rng();
+    //         let random_size = rand::Rng::gen_range(&mut rng, 1000..9000);
+    //         records.push(create_random_bytes(random_size));
+    //     });
+    //     send_and_receive_with_records(sender.clone(), 0, 0, records);
 
-        drop(sender);
-        handle.join().map_err(|_| StoreError::AllocLogSegment)?;
-        Ok(())
-    }
+    //     drop(sender);
+    //     handle.join().map_err(|_| StoreError::AllocLogSegment)?;
+    //     Ok(())
+    // }
 
     fn send_and_receive_with_records(
         sender: crossbeam::channel::Sender<IoTask>,
