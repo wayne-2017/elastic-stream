@@ -29,7 +29,7 @@ pub(crate) struct ReadTask {
 pub struct SingleFetchResult {
     pub(crate) stream_id: i64,
     pub(crate) wal_offset: i64,
-    /// The payload of a SingleFetchResult may be splitted into multiple `Bytes`s.
+    /// The payload of a SingleFetchResult may be split into multiple `Bytes`s.
     pub(crate) payload: Vec<Bytes>,
 }
 
@@ -72,7 +72,7 @@ pub(crate) struct WriteTask {
 
     /// `Record` serialized.
     ///
-    /// Note: An application `Record` may be splitted into multiple WAL blocks/records,
+    /// Note: An application `Record` may be split into multiple WAL blocks/records,
     /// with enhancing digest/checksum and integrity guarantee.
     #[derivative(Debug = "ignore")]
     pub(crate) buffer: Bytes,

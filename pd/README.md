@@ -20,11 +20,13 @@ make
 ```sh
 ./bin/${OS}_${ARCH}/pd
 ```
+
 For more options, run `./bin/${OS}_${ARCH}/pd --help`.
 
 ## Contributing
 
 Please ensure that your change passes static analysis:
+
 - `make lint` to run linters.
 - `make test` to run unit tests.
 

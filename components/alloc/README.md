@@ -1,11 +1,11 @@
-#Usage
+# Usage
 
-```
-$ cargo build  --no-default-features --features="tcmalloc"
+```sh
+cargo build  --no-default-features --features="tcmalloc"
 ```
 
 Or:
 
 ```sh
-$ TCMALLOC=1 make build
+TCMALLOC=1 make build
 ```

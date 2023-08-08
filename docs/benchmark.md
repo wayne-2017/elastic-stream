@@ -7,6 +7,7 @@ Benchmark on `Append` operations.
 ### Platform
 
 [i4i.2xlarge](https://aws.amazon.com/ec2/instance-types/i4i/#Product_Details)
+
 - 8 vCPUs
 - 64 GiB Memory
 - 1250.00 MB/s [EBS Maximum throughput](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html#current-storage-optimized)
@@ -20,6 +21,7 @@ Benchmark on `Append` operations.
 4. Record the CPU and memory usage of the Range Server, the SDK request latency, and the write latency on the Range Server side during the process.
 
 ### Result
+
 #### Elastic Stream
 
 | Batch size (KB) | Throughput (MB/s) | Stream | CPU Usage | Memory Usage (MB) | Average* (ms) | P95* (ms) | P99* (ms) | P99.9* (ms) | Average** (us) | P95** (us) | P99** (us) | P99.9** (us) |
@@ -36,6 +38,7 @@ Benchmark on `Append` operations.
 \**: Server Side Latency
 
 #### Kafka
+
 | Batch size (KB) | Throughput (MB/s) | Partition | CPU Usage | Average* (ms) | P95* (ms) | P99* (ms) | P99.9* (ms) |
 | :--: | :--: | :--: | :--:| :---: | :---: | :---: | :---: |
 | 64   | 384  | 1    | 115% | 4.61 | 15 | 19 | 37 |
@@ -44,11 +47,11 @@ Benchmark on `Append` operations.
 
 \*: E2E Latency
 
-Note that for comparison, Kafka is tested with only one single broker. In that case, Kafka can not offer enough throughput with P99 latency as low as about 20 ms. Threrefore, more brokers are needed to achieve the same throughput.
+Note that for comparison, Kafka is tested with only one single broker. In that case, Kafka can not offer enough throughput with P99 latency as low as about 20 ms. Therefore, more brokers are needed to achieve the same throughput.
 
 #### Compare
 
-| Workload  | Stream / Partition | Target P99 Latency | Elastic Stream<br />Nodes | Elastic Stream<br />Latency | Kafka<br />Nodes | Kafka<br />Latency |
+| Workload  | Stream / Partition | Target P99 Latency | Elastic Stream Nodes | Elastic Stream Latency | Kafka Nodes | Kafka Latency |
 | :-------: | :--: | :-----: | :----------------: | :------: | :----------------: | :---: |
 | 500 MB/s  | 1    | < 20 ms | 1 (is4gen.2xlarge) | 2.075 ms | 2 (is4gen.2xlarge) | 19 ms |
 | 500 MB/s  | 100  | < 20 ms | 1 (is4gen.2xlarge) | 1.976 ms | 2 (is4gen.2xlarge) | 27 ms |

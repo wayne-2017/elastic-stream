@@ -16,7 +16,7 @@ pub trait MinOffset {
     fn min_offset(&self) -> u64;
 }
 
-/// Trait of local range manger.
+/// Trait of local range manager.
 pub trait LocalRangeManager {
     // TODO: error propagation
     fn list_by_stream(&self, stream_id: i64, tx: mpsc::UnboundedSender<RangeMetadata>);

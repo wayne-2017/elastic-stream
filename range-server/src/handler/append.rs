@@ -63,7 +63,7 @@ impl Append {
     /// Process message publish request
     ///
     /// On receiving a message publish request, it wraps the incoming request to a `Record`.
-    /// The record is then moved to `Store::append`, where persistence, replication and other auxillary
+    /// The record is then moved to `Store::append`, where persistence, replication and other auxiliary
     /// operations are properly performed.
     ///
     /// Once the underlying operations are completed, the `Store#append` API shall asynchronously return

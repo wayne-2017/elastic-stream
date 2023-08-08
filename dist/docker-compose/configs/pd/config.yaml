@@ -52,7 +52,7 @@ log:
       - stderr
     # the logger's encoding, "json" or "console"
     encoding: json
-    # Any configuration in zap.Config can alse be set here
+    # Any configuration in zap.Config can also be set here
     #disableCaller: false
     #disableStacktrace: false
     #encoderConfig:

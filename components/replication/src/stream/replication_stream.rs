@@ -480,7 +480,7 @@ where
         // Slow path
         // 1. Find the *first* range which match the start_offset.
         // 2. Fetch the range.
-        // 3. The invoker should loop invoke fetch util the Dataset fullfil the need.
+        // 3. The invoker should loop invoke fetch util the Dataset fulfill the need.
         let range = self
             .ranges
             .borrow()

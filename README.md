@@ -1,14 +1,15 @@
-## Introduction
+# ElasticStream
+
 ElasticStream is an open-source, elastic streaming platform. ElasticStream is designed to stand on shoulders of cloud infra-structure,
 excelling itself in scalability, fault-tolerance, cost-effectiveness and security.
 
-
-
 ## Architecture Overview
+
 ElasticStream has three components: placement-driver, range-server and clients.
 ![Arch](docs/images/elastic-stream-arc.png)
 
 ## Range Server Threading Model
+
 Primary design goal of range-server is to scale linearly with addition of hardware: including CPU and SSD. To achieve this, threads of it must be as independent from one another as possible, to avoid software locks and even atomic instructions. With that said, instead of centralizing shared data in a global location that all threads access after acquiring a lock, each thread of range-server has its own data. When other threads want to access the data, they pass a message to the owning thread to perform the operation on their behalf through lockless ring-buffers.
 
 Range Server has 3 categories of threads: worker threads, IO thread and miscellaneous auxiliary threads. The former two kinds follows [Thread-per-Core](https://www.datadoghq.com/blog/engineering/introducing-glommio/) architecture while auxiliary threads use traditional multi-threads parallelism, with CPU affinity set.
@@ -45,10 +46,13 @@ cargo llvm-cov
 ```
 
 With HTML report,
+
 ```sh
 cargo llvm-cov --html
 ```
+
 or
+
 ```sh
 cargo llvm-cov --open
 ```
@@ -64,11 +68,13 @@ Read [more](https://crates.io/crates/cargo-llvm-cov)
 Sample [integration](https://github.com/taiki-e/cargo-llvm-cov) with github action.
 
 ## How to Contribute
+
 We welcome contribution of various types: documentation, bug reporting, feature request, and pull requests. Before proposing a major large-scale change, it is advised to discuss your proposal first.
 
 ## Notes
 
 ### **communicating-between-sync-and-async-code**
+
 `Store` module is built on top of io-uring directly. The `Server` module, however, is built using `tokio-uring`, following thread-per-core paradigm, which as a result is fully async. Reading and writing records between these two modules involve communication between async and sync code, as shall comply with [the following guideline](https://docs.rs/tokio/latest/tokio/sync/mpsc/index.html#communicating-between-sync-and-async-code)
 
 ## Run with Address Sanitizer
@@ -78,4 +84,5 @@ Sometimes you have to deal with low-level operations, for example, interacting w
 ```sh
 RUSTFLAGS=-Zsanitizer=address cargo test test_layout -Zbuild-std --target x86_64-unknown-linux-gnu
 ```
+
 Read the [following link](https://doc.rust-lang.org/beta/unstable-book/compiler-flags/sanitizer.html) for more advanced usage.
