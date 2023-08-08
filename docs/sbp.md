@@ -11,37 +11,52 @@ The protocol is big-endian (network byte order).
 Each frame consists of a fixed-size header, followed by a variable-size extended header and payload. Section 2 describes the header, while the content of the extended header and payload depends on the operation code specified in the header. Section 4 provides details about supported operation codes and their corresponding payloads. The SBP frame format considers the payload as opaque, which means that it is interpreted by the application layer.
 
 The design of SBP follows two principles:
+
 - Batch: SBP is designed to support batch processing to reduce network communication overhead. This allows clients to send multiple requests in one frame or vice versa.
 - Streaming: The server has the capability to respond to requests in a streaming manner, as opposed to responding to all requests at once, which can decrease response latency significantly.
 
-
 ## Frame Header
+
 The Frame Header is a fixed 12-octet header that appears at the beginning of every frame. It contains fields for the Frame Length, Magic Code, Operation Code, Flags, and Stream Identifier.
 
 ### Frame Length
+
 The length of the frame is expressed as a 32-bit integer. `Frame Length` = 16 + `Header.length` + `Payload.length`.
+
 ### Magic Code
+
 A fixed value representing the protocol self. Currently, the value is 23. This field is used to detect the presence of the SBP protocol, and implementations MUST discard any frame that does not contain the correct magic number.
+
 ### Operation Code
+
 The 16-bit opcode of the frame. The frame opcode determines the format and semantics of the frame. Implementations MUST ignore and discard any frame with an unknown opcode.
+
 ### Flags
+
 Flags apply to this frame. The flags have the following meaning (described by the mask that allows selecting them):
+
 - 0x01: Response flag. If set, the frame contains the response payload to a specific request frame identified by a stream identifier. If not set, the frame represents a request frame.
 - 0x02: Response end flag. If set, the frame is the last frame in a response sequence. If not set, the response sequence continues with more frames. The response sequence may contain one or more frames.
 - 0x04: System error flag. If a response frame has the this flag set, its extended header will be type of `SystemErrorResponse`.
 
 The rest of the flags are currently unused and ignored.
+
 ### Stream Identifier
+
 A unique identifier for a request frame or a stream request frame. That is, it is used to support request-response or streaming communication models simultaneously. The stream identifier is expressed as a 32-bit integer in network byte order.
 
 When communicating with the server, the client must set this stream id to a non-negative value. It is ensured that the request and response frames will have matching stream ids.
+
 ### Extended Header
+
 The extended header starts with format and length fields. The format field is used to identify the serialization format of the extended header. The length field is used to determine the length of the extended header. The length field is expressed as a 24-bit integer in network byte order. The extended header is followed by the payload.
 
 Currently, SBP only defines one format type:
+
 - 0x01: FlatBuffers format indicates that the payload of the extended header is serialized by flatbuffers.
 
 ## Frame Definitions
+
 This specification outlines various types of frames, each with a unique 16-bit opcode to identify them. Each frame type has its own specific extended header and payload.
 
 The table below shows all the supported frame types along with a preallocated opcode.
@@ -70,21 +85,24 @@ The table below shows all the supported frame types along with a preallocated op
 The below sub-sections describe the details of each frame type, including their usage, their binary format, and the meaning of their fields.
 
 ### PING
+
 The PING frame (opcode=0x0001) is a mechanism for measuring a minimal round-trip time from the sender, as well as determining whether an idle connection is still functional. PING frames can be sent from any endpoint.
 
 Receivers of a PING frame set the response flag and the response end flag to do a PONG, with the same extended headers and payload.
 
 ### GOAWAY
+
 The GOAWAY frame (opcode=0x0002) is used to initiate the shutdown of a connection or to signal serious error conditions. GOAWAY allows an endpoint to gracefully stop accepting new streams while still finishing the processing of previously established streams. This enables administrative actions, like server maintenance.
 
 ### HEARTBEAT
+
 The HEARTBEAT frame(opcode=0x0003) is used to keep clients alive, carrying the necessary role and status information.
 
 The client can send a heartbeat frame to the server periodically. If the server does not receive any heartbeat frame from the client for a long time, the server may close the connection, even clean up the resources of the client.
 
 **Request Frame:**
 
-```
+```txt
 Request Header => client_id client_role range_server
   client_id => string
   client_role => enum {RANGE_SERVER, CLIENT}
@@ -96,7 +114,8 @@ Request Payload => Empty
 ```
 
 **Response Frame:**
-```
+
+```txt
 Response Header => client_id client_role range_server
   client_id => string
   client_role => enum {RANGE_SERVER, CLIENT}
@@ -125,12 +144,13 @@ The request and response frames of HEARTBEAT have the same format. The table bel
 | message | string | The error message of the response. |
 | detail | bytes | Additional information about the error. |
 
-
 ### ALLOCATE_ID
+
 The ALLOCATE_ID frame(opcode=0x0004) allocates a unique identifier from placement drivers.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms, host
 
 Request Payload => Empty
@@ -141,8 +161,9 @@ Request Payload => Empty
 | timeout_ms| int32 | Request would be valid within the duration in milliseconds |
 | host  | String| Host name of the applicant |
 
-** Response Frame:**
-```
+**Response Frame:**
+
+```txt
 Response Header => id
   status => code message detail
     code => int16
@@ -153,10 +174,12 @@ Response Payload => Empty
 ```
 
 ### APPEND
+
 The APPEND frame(opcode=0x1001) appends record batches to the range server.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [append_request]
   timeout_ms => int32
   append_requests => stream_id request_index batch_length
@@ -180,7 +203,8 @@ Request Payload => [stream_data]
 | record_batch | bytes | The payload of each record batch, already serialized by clients. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [append_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -218,10 +242,12 @@ Response Payload => Empty
 | detail | bytes | Additional information about the error. |
 
 ### FETCH
+
 The FETCH frame(opcode=0x1002) fetches record batches from the range server. This frame supports fetching data from multiple streams in one frame, and the response could be split into multiple frames then returned in a streaming way. The best benefit of this behavior is that the storage server could return records timely according to the arrival of the records, which is very useful for real-time data processing.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => max_wait_ms min_bytes [fetch_requests]
   max_wait_ms => int32
   min_bytes => int32
@@ -245,7 +271,8 @@ Request Payload => Empty
 | batch_max_bytes | int32 | The maximum bytes of the current batch to fetch from the stream. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [fetch_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -285,13 +312,14 @@ Response Payload => [stream_data]
 | record_batch | bytes | The payload of each record batch, already serialized. |
 
 ### LIST_RANGES
+
 The LIST_RANGES frame(opcode=0x2001) lists the ranges of a batch of streams. Or it could list the ranges of all the streams in a specific range server.
 
 **Request Frame:**
 
 There are two types of LIST_RANGES request, one is to list the ranges of a batch of streams, and the other is to list the ranges of all the streams in a specific range server.
 
-```
+```txt
 Request Header => timeout_ms [range_owners]
   timeout_ms => int32
   range_owners => union { stream_id, range_server }
@@ -316,7 +344,7 @@ Request Payload => Empty
 
 **Response Frame:**
 
-```
+```txt
 Response Header => throttle_time_ms [list_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -369,10 +397,12 @@ Response Payload => Empty
 | is_primary | bool | Whether the range in current range server is primary or secondary. |
 
 ### SEAL_RANGES
+
 The SEAL_RANGES frame(opcode=0x2002) seals the current writable ranges of a batch of streams.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [ranges]
   timeout_ms => int32
   ranges => stream_id range_index
@@ -390,7 +420,8 @@ Request Payload => Empty
 | range_index | int32 | A specific range to seal in the stream. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [seal_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -424,12 +455,14 @@ Response Payload => Empty
 | range | struct | Both the PD and the range server will handle the seal ranges request. The range server returns the sealed range, while the PD returns the newly writable range. |
 
 ### SYNC_RANGES
+
 The SYNC_RANGES frame(opcode=0x2003) syncs newly writable ranges to accelerate the availability of a newly created writable range.
 
 Or, it could be used to assign a new replics of a range to a new range server.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [stream_ranges]
   timeout_ms => int32
   stream_ranges => stream_id [ranges]
@@ -447,7 +480,8 @@ Request Payload => Empty
 | ranges | array | A specific range to sync to the range server. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [sync_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -468,10 +502,12 @@ Response Payload => Empty
 The response frame is similar to the request frame, so the detailed description is omitted.
 
 ### DESCRIBE_RANGES
+
 The DESCRIBE_RANGES frame(opcode=0x2004) describes the ranges of a batch of streams. Usually, the client will use this frame to get the newly end offset of the stream after the write operation.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [ranges]
   timeout_ms => int32
   ranges => stream_id range_index
@@ -487,7 +523,8 @@ Request Header => timeout_ms [ranges]
 | range_index | int32 | A specific range to describe. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [describe_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -519,10 +556,12 @@ Response Header => throttle_time_ms [describe_responses]
 | range | struct | The range, returned by the describe ranges request. |
 
 ### CREATE_STREAMS
+
 The CREATE_STREAMS frame(opcode=0x3001) creates a batch of streams to PD. This frame with batch ability is very useful for importing metadata from other systems.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [streams]
   timeout_ms
   streams => replica_nums retention_period_ms
@@ -540,7 +579,8 @@ Request Payload => Empty
 | retention_period_ms | int64 | The retention period of the records in the stream in milliseconds. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [create_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -578,10 +618,12 @@ Response Payload => Empty
 | detail | bytes | Additional information about the error. |
 
 ### DELETE_STREAMS
+
 The DELETE_STREAMS frame(opcode=0x3002) deletes a batch of streams to PD or range server. The PD will delete the stream metadata as well as the range info, while the range server only marks the stream as deleted to reject the new write requests timely.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [streams]
   timeout_ms
   streams => stream_id replica_nums retention_period_ms
@@ -597,7 +639,8 @@ Only the stream_id is required in the request frame, the other fields are ignore
 The frame is simple, so the detailed description is omitted.
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [delete_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -622,10 +665,12 @@ The deleted_stream will be returned if the stream is deleted successfully, other
 The frame is simple, so the detailed description is omitted.
 
 ### UPDATE_STREAMS
+
 The UPDATE_STREAMS frame(opcode=0x3003) updates a batch of streams to PD. The frame is similar to the CREATE_STREAMS frame
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [streams]
   timeout_ms
   streams => stream_id replica_nums retention_period_ms
@@ -637,7 +682,8 @@ Request Payload => Empty
 ```
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [update_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -658,11 +704,14 @@ Response Payload => Empty
 ```
 
 These two frames are similar with the CREATE_STREAMS frame, so the detailed description is omitted.
+
 ### DESCRIBE_STREAMS
+
 The DESCRIBE_STREAMS frame(opcode=0x3004) describes a batch of streams from PD. The response frame is similar to the CREATE_STREAMS frame.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [stream_ids]
   timeout_ms
   stream_ids => stream_id
@@ -672,7 +721,8 @@ Request Payload => Empty
 ```
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [describe_responses]
   throttle_time_ms => int32
   status => code message detail
@@ -693,6 +743,7 @@ Response Payload => Empty
 ```
 
 ### TRIM_STREAMS
+
 The TRIM_STREAMS frame(opcode=0x3005) trims a batch of streams to PD.
 
 The range server stores the records in the stream in a log structure, and the records are appended to the end of the log. Consider the length of disk is limited, the range server will delete the records to recycling the disk space. Once the deletion occurs, some ranges should be trimmed to avoid the clients to read the deleted records.
@@ -700,7 +751,8 @@ The range server stores the records in the stream in a log structure, and the re
 The range server will send the TRIM_STREAMS frame to the PD to trim the stream with a trim offset. The PD will delete the ranges whose end offset is less than the trim offset and shrink the ranges whose start offset is less than the trim offset.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => timeout_ms [trimmed_streams]
   timeout_ms
   trimmed_streams => stream_id trim_offset
@@ -716,7 +768,8 @@ Request Header => timeout_ms [trimmed_streams]
 | trim_offset | int64 | The trim offset of the stream. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => throttle_time_ms [streams]
   throttle_time_ms => int32
   status => code message detail
@@ -751,10 +804,12 @@ Response Header => throttle_time_ms [streams]
 | range | struct | The smallest range of the stream after a trim operation. |
 
 ### REPORT_METRICS
+
 The REPORT_METRICS frame(opcode=0x4001) reports load metrics of Range Server to PD. PD uses these metrics to allocate ranges.
 
 **Request Frame:**
-```
+
+```txt
 Request Header => range_server
   range_server => server_id advertise_addr
     server_id => int32
@@ -802,7 +857,8 @@ Request Payload => Empty
 | range_active_cnt | int16 | Number of active(recently read or write) ranges in the past minute. |
 
 **Response Frame:**
-```
+
+```txt
 Response Header => range_server
   range_server => server_id advertise_addr
     server_id => int32
@@ -816,10 +872,12 @@ Response Payload => Empty
 ```
 
 ### DESCRIBE_PD_CLUSTER
+
 The DESCRIBE_PD_CLUSTER frame(opcode=0x4002) requests placement driver to describe its current cluster membership. Embedded clients of the range-server MUST send heartbeats / load metrics to all PD nodes.
 
-** Request Frame**
-```
+**Request Frame:**
+
+```txt
 Request Header => range_server
   range_server => server_id advertise_addr
     server_id => int32
@@ -836,7 +894,8 @@ Request Payload => Empty
 | advertise_addr| string | advertise address of the range-server |
 
 **Response Frame:**
-```
+
+```txt
 Response Header=> status
   status =>
     code => int16
@@ -855,16 +914,15 @@ Response Body => Empty
 | message | string | The top level error message of the response. |
 | detail | bytes | Additional information about the error. |
 
-
-
 ## Error Codes
 
 The SBP protocol defines a set of numeric error codes that are used to indicate the type of occurred error. These error codes are used in the status.code field of the response header, and can be translated by the client to a human-readable error message.
 
 ### System Error Frame
+
 There is a special error frame that is used to indicate that the server encountered an unexpected error or a request-agnostic error. The error frame is sent with the following format:
 
-```
+```txt
 Error Response Header => status
   status => code message detail
     code => int16
@@ -873,6 +931,7 @@ Error Response Header => status
 ```
 
 When the system error flag is set, the above error frame is sent instead of the normal response frame.
+
 ### Error Codes Table
 
 The error codes are defined in the following table.
@@ -887,7 +946,7 @@ The error codes are defined in the following table.
 
 ## References
 
-1. HTTP2: https://httpwg.org/specs/rfc7540.html
-2. FlatBuffers: https://google.github.io/flatbuffers/
-3. CQL BINARY PROTOCOL v4: https://github.com/apache/cassandra/blob/trunk/doc/native_protocol_v4.spec
-4. Kafka Protocol: https://kafka.apache.org/protocol.html#protocol_versioning
+1. HTTP2: <https://httpwg.org/specs/rfc7540.html>
+2. FlatBuffers: <https://google.github.io/flatbuffers/>
+3. CQL BINARY PROTOCOL v4: <https://github.com/apache/cassandra/blob/trunk/doc/native_protocol_v4.spec>
+4. Kafka Protocol: <https://kafka.apache.org/protocol.html#protocol_versioning>
