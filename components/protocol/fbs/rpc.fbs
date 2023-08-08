@@ -369,7 +369,7 @@ table FetchResponse {
     // The time in milliseconds to throttle the client, due to a quota violation or the server is too busy.
     throttle_time_ms: int32 (id: 1);
 
-    // when range server don't have the data in local, range server will return object metadata list which conver the fetch range.
+    // When the range server does not have the data locally, it will return an object metadata list that corresponds to the fetched range.
     object_metadata_list: [ObjectMetadata] (id: 2);
 }
 
@@ -387,7 +387,7 @@ table ObjectMetadata {
 
 // Used to fetch the ranges from a specific range server or a specific stream list.
 // Regard this table as a union type.
-// Alway set one of the fields.
+// Always set one of the fields.
 table ListRangeCriteria {
     // If non-negative, placement drivers are expected to filter ranges assigned to the specified server.
     server_id: int32 = -1 (id: 0);

@@ -19,7 +19,4 @@ jobs:
 
       - name: Run CodeSpell
         run: |
-          codespell --quiet-level=2 \
-                   --skip "./style/codespell/ignore_words.txt,./.git" \
-                   --ignore-words ./style/codespell/ignore_words.txt \
-                   --exclude-file ./style/codespell/exclude_file.txt \
+          codespell --config ./style/codespell/setup.cfg

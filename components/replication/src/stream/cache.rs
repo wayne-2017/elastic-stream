@@ -257,7 +257,7 @@ impl BlockCache {
         })
     }
 
-    /// Get RecordsBlock from cache that try fullfil the request,
+    /// Get RecordsBlock from cache that try fulfill the request,
     /// and return the readahead info:
     /// - if the block is the last block of the stream
     /// - or the read blocks contain a readahead info.

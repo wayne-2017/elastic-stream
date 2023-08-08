@@ -75,7 +75,7 @@ where
                 self.background_readahead(readahead);
             }
             if next_start_offset >= end_offset || next_batch_max_bytes == 0 {
-                // fullfil by block cache.
+                // fulfill by block cache.
                 return Ok(FetchDataset::Full(blocks));
             }
 
@@ -133,7 +133,7 @@ where
             blocks.push(hot_block);
         }
         if *next_start_offset >= end_offset || *next_batch_max_bytes == 0 {
-            // fullfil by hot cache.
+            // fulfill by hot cache.
             return None;
         }
 

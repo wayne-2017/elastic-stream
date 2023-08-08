@@ -813,7 +813,7 @@ mod tests {
         }
 
         {
-            // Case three: the last page should be splitted, with dirty cache.
+            // Case three: the last page should be split, with dirty cache.
             // Load the all the four pages.
             let mut buf = [0u8; 4 * 4096_usize];
             segment.read_exact_at(&mut buf, 0).unwrap();

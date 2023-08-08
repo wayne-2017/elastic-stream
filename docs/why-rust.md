@@ -1,5 +1,5 @@
 # GC vs Native
-1. Predicable latency
+1. Predictable latency
 2. Access to modern storage API without overhead
 3. Custom management of memory, cache: key to multi-tenant system
 

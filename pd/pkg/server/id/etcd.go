@@ -136,22 +136,22 @@ func (e *EtcdAllocator) growLocked(ctx context.Context, growth uint64) error {
 		return errors.Wrapf(err, "get key %s", e.path)
 	}
 
-	var prevEnd uint64
+	var previousEnd uint64
 	var cmpList []clientv3.Cmp
 	if e.cmpFunc != nil {
 		cmpList = append(cmpList, e.cmpFunc())
 	}
 	if kv == nil {
-		prevEnd = e.base
+		previousEnd = e.base
 		cmpList = append(cmpList, clientv3.Compare(clientv3.CreateRevision(e.path), "=", 0))
 	} else {
-		prevEnd, err = typeutil.BytesToUint64(kv.Value)
+		previousEnd, err = typeutil.BytesToUint64(kv.Value)
 		if err != nil {
 			return errors.Wrapf(err, "parse value %s", string(kv.Value))
 		}
 		cmpList = append(cmpList, clientv3.Compare(clientv3.Value(e.path), "=", string(kv.Value)))
 	}
-	end := prevEnd + growth
+	end := previousEnd + growth
 
 	v := typeutil.Uint64ToBytes(end)
 	txn := etcdutil.NewTxn(ctx, e.kv, logger).If(cmpList...).Then(clientv3.OpPut(e.path, string(v)))
@@ -168,7 +168,7 @@ func (e *EtcdAllocator) growLocked(ctx context.Context, growth uint64) error {
 	}
 
 	e.end = end
-	e.base = prevEnd
+	e.base = previousEnd
 	return nil
 }
 

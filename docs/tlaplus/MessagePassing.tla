@@ -13,7 +13,7 @@ VARIABLES messages
 (***************************************************************************)
 (* Message Passing                                                         *)
 (*                                                                         *)
-(* Messages are represented by a funcion of MSG -> Delivery Count.         *)
+(* Messages are represented by a function of MSG -> Delivery Count.        *)
 (* Each message sent is modelled as both delivered and lost via            *)
 (* existential quantification. When a message is processed, the delivery   *)
 (* count is decremented.                                                   *)
@@ -117,18 +117,18 @@ MessageProcessed(msg) ==
 ReceivableMessageOfType(msgs, msg, message_type) ==
     /\ msg.type = message_type
     /\ msgs[msg] >= 1
-    
+
 ReceivableRequest(msgs, msg) ==
     /\ msg.type \in { AddEntryRequestMessage,
                       FenceRequestMessage,
                       ReadRequestMessage }
-    /\ msgs[msg] >= 1    
+    /\ msgs[msg] >= 1
 
 ReceivableResponse(msgs, msg) ==
     /\ msg.type \in { AddEntryResponseMessage,
                       FenceResponseMessage,
                       ReadResponseMessage }
-    /\ msgs[msg] >= 1 
+    /\ msgs[msg] >= 1
 
 IsEarliestMsg(msg) ==
     ~\E msg2 \in DOMAIN messages :

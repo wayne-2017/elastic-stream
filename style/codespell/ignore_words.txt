@@ -1,1 +1,4 @@
 crate
+decorder
+deallocatedp
+allocatedp

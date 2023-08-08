@@ -44,7 +44,7 @@ Benchmark on `Append` operations.
 
 \*: E2E Latency
 
-Note that for comparison, Kafka is tested with only one single broker. In that case, Kafka can not offer enough throughput with P99 latency as low as about 20 ms. Threrefore, more brokers are needed to achieve the same throughput.
+Note that for comparison, Kafka is tested with only one single broker. In that case, Kafka can not offer enough throughput with P99 latency as low as about 20 ms. Therefore, more brokers are needed to achieve the same throughput.
 
 #### Compare
 
